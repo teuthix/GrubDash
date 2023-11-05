@@ -27,26 +27,26 @@ function bodyDataHas(propertyName){
 
 function validDishes(req, res, next) {
     const { data: { dishes } = {} } = req.body;
-    dishes.forEach((dish) => {
-        if(dish.quantity && Number.isInteger(dish.quantity) && dish.quantity > 0) {
-            next();
-        }
-        next({
-            status: 400,
-            message: "needs a quantity of dishes"
-        });
-    })
-}
-
-function hasValidQuantity(req, res, next) {
-    const {data: {dishes} = {} } = req.body;
-    if(dishes[quantity] && quantity > 0) {
-        return next();
+    if(dishes && dishes.length && Array.isArray(dishes)) {
+        next();
     }
     next({
         status: 400,
-        message: `needs valid quantity`
+        message: "needs dishes"
     });
+}
+
+function hasValidQuantity(req, res, next) {
+    const { data: { dishes } = {} } = req.body;
+    dishes.forEach((dish, index) => {
+        if(!dish.quantity || !Number.isInteger(dish.quantity) || dish.quantity <= 0) {
+            next({
+                status: 400,
+                message: `Dish ${index} must have a quantity that is an integer greater than 0`
+            });
+        }
+    })
+    next();
 }
 
 function create(req, res, next) {
@@ -76,11 +76,49 @@ function read(req, res) {
     res.json({data: res.locals.order});
 }
 
+function validOrderProperty(propertyName){
+    return function (req, res, next) {
+        const { data: {dishes} = {} } = req.body;
+        if(dishes[propertyName]) {
+            return next();
+        }
+        next({
+            status: 400,
+            message: `missing ${propertyName}`
+        })
+    }
+}
+
 function update(req, res, next) {
     const order = res.locals.dish;
     const { data: {deliverTo, mobileNumber, status, dishes} = {} } = req.body;
 
-    order.deliverTo = deliverTo;
+    // order.deliverTo = deliverTo;
+    order.mobileNumber = mobileNumber;
+    order.status = status;
+    order.dishes = dishes;
+
+    res.json({ data: order });
+}
+
+// function statusPending(req, res, next) {
+//     const { orderId } = req.params;
+//     const foundOrder = res.locals.order;
+//     if(foundOrder.status == 'pending'){
+//         next({
+//         status: 400,
+//         message: "cannot delete pending"
+//     });
+//     }
+//     next();
+// }
+
+function destroy(req, res) {
+    const {orderId} = req.params;
+    const index = orders.findIndex((order) => order.id === Number(orderId));
+    const deletedOrders = orders.splice(index, 1);
+
+    res.sendStatus(204);
 }
 
 module.exports = {
@@ -94,4 +132,12 @@ module.exports = {
         create
     ],
     read: [orderExists, read],
+    update: [
+        orderExists, 
+        validOrderProperty("deliverTo"),
+        validOrderProperty("mobileNumber"),
+        validDishes,
+        hasValidQuantity,
+        update],
+    destroy: [orderExists,  destroy],
 }
