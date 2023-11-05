@@ -7,9 +7,13 @@ const dishes = require(path.resolve("src/data/dishes-data"));
 const nextId = require("../utils/nextId");
 
 // TODO: Implement the /dishes handlers needed to make the tests pass
+
+// get for "/"
 function list(req, res) {
     res.json({data: dishes});
 }
+
+// checks if the property is present
 function bodyDataHas(propertyName) {
     return function (req, res, next) {
         const { data = {} } = req.body;
@@ -23,6 +27,7 @@ function bodyDataHas(propertyName) {
     }
 }
 
+// checks if the price is >= 0 and a number
 function hasValidPrice(req, res, next) {
     const { data: { price } = {} } = req.body;
     if (price < 0 || !Number.isInteger(price)){
@@ -34,6 +39,8 @@ function hasValidPrice(req, res, next) {
     next();
 }
 
+// post for "/"
+// uses bodyDataHas, hasValidPrice
 function create(req, res, next) {
     const { data: { name, description, price, image_url} = {} } = req.body;
     const newDish = {
@@ -44,6 +51,7 @@ function create(req, res, next) {
     res.status(201).json({data: newDish});
 }
 
+// checks if :dishId matches a dish in the data
 function dishExists(req, res, next) {
     const { dishId } = req.params;
     const foundDish = dishes.find((dish) => dish.id == dishId);
@@ -57,10 +65,13 @@ function dishExists(req, res, next) {
     })
 }
 
+// get for ":dishId"
+// uses dishExists
 function read(req, res, next) {
     res.json({data: res.locals.dish});
 }
 
+// checks that the :dishId matches the id of the data
 function idMatches(req, res, next){
     const { dishId } = req.params;
     const { data: {id} = {}} = req.body;
@@ -73,6 +84,7 @@ function idMatches(req, res, next){
     next(); 
 }
 
+// put for "/:dishId"
 function update(req, res, next) {
     const dish = res.locals.dish;
     const { data: { name, description, price, image_url} = {} } = req.body;

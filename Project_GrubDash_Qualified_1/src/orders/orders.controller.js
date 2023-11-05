@@ -80,24 +80,11 @@ function orderExists(req, res, next) {
     });
 }
 
-// get for "/:orderId", res.locals.order from orderExists
+// get for "/:orderId"
+// uses orderExists
 function read(req, res) {
     res.json({data: res.locals.order});
 }
-
-// checks order's dishes's property
-// function validDishProperty(propertyName){
-//     return function (req, res, next) {
-//         const { data: {dishes} = {} } = req.body;
-//         if(dishes[propertyName]) {
-//             return next();
-//         }
-//         next({
-//             status: 400,
-//             message: `missing ${propertyName}`
-//         })
-//     }
-// }
 
 // checks that data has an id property and it matches :orderId
 function idMatches(req, res, next){
@@ -140,9 +127,7 @@ function update(req, res) {
 
 // checks if status is pending and if it isn't throws error
 function statusPending(req, res, next) {
-    // const { orderId } = req.params;
     const order = res.locals.order;
-    // console.log(order.status, "testtttt");
     if(order.status !== 'pending'){
         next({
         status: 400,
