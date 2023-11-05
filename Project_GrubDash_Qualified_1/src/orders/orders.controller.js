@@ -101,17 +101,18 @@ function update(req, res, next) {
     res.json({ data: order });
 }
 
-// function statusPending(req, res, next) {
-//     const { orderId } = req.params;
-//     const foundOrder = res.locals.order;
-//     if(foundOrder.status == 'pending'){
-//         next({
-//         status: 400,
-//         message: "cannot delete pending"
-//     });
-//     }
-//     next();
-// }
+function statusPending(req, res, next) {
+    // const { orderId } = req.params;
+    const order = res.locals.order;
+    console.log(order.status, "testtttt");
+    if(order.status !== 'pending'){
+        next({
+        status: 400,
+        message: "An order cannot be deleted unless it is pending."
+    });
+    }
+    next();
+}
 
 function destroy(req, res) {
     const {orderId} = req.params;
@@ -139,5 +140,5 @@ module.exports = {
         validDishes,
         hasValidQuantity,
         update],
-    destroy: [orderExists,  destroy],
+    destroy: [orderExists, statusPending, destroy],
 }
